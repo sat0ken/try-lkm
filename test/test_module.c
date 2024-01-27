@@ -1,11 +1,14 @@
 #include <linux/module.h>
 
+// test_call.cの関数
+void print(void);
 static int param = 5;
 
 // 初期化関数
 static int __init test_init(void)
 {
     printk("Init module! param is %d\n", param);
+    print();
     return 0;
 }
 
@@ -13,6 +16,7 @@ static int __init test_init(void)
 static void __exit test_exit(void)
 {
     printk("Exit module! param is %d\n", param);
+    print();
 }
 
 module_init(test_init); // 初期化関数宣言
