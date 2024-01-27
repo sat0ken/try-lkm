@@ -2,6 +2,7 @@
 #include <linux/fs.h>
 #include <linux/platform_device.h>
 
+#define DEV_NAME "skel"
 #define SKEL_MAJOR_NUM 60
 
 // openハンドラ
@@ -34,17 +35,17 @@ static ssize_t skel_read(struct file *file, char __user *buf, size_t count, loff
 
 // ファイル操作構造体
 static const struct file_operations skel_fops = {
-    .owner  = THIS_MODULE,
-    .open   = skel_open,
+    .owner   = THIS_MODULE,
+    .open    = skel_open,
     .release = skel_release,
-    .read   = skel_read,
-    .write  = skel_write,
+    .read    = skel_read,
+    .write   = skel_write,
 };
 
 // class構造体
 static struct class skel_class = {
     .owner  = THIS_MODULE,
-    .name   = "skel",
+    .name   = DEV_NAME,
 };
 
 // probe関数
@@ -54,7 +55,7 @@ static int skel_probe(struct platform_device *pdev)
     printk("SKEL Probe\n");
 
     // デバイスファイルを作成する
-    dev = device_create(&skel_class, NULL, MKDEV(SKEL_MAJOR_NUM, 0), NULL, "skel");
+    dev = device_create(&skel_class, NULL, MKDEV(SKEL_MAJOR_NUM, 0), NULL, DEV_NAME);
     if (IS_ERR(dev)) {
         dev_err(&pdev->dev, "failed to create device.\n");
         return PTR_ERR(dev);
@@ -76,8 +77,8 @@ static struct platform_driver skel_driver = {
     .probe  = skel_probe,
     .remove = skel_remove,
     .driver = {
-        .name = "skel",
-        .owner = THIS_MODULE,
+        .name   = DEV_NAME,
+        .owner  = THIS_MODULE,
      },
 };
 
@@ -107,7 +108,7 @@ static int __init skel_init(void)
     printk("SKEL Init: platform_driver_register OK\n");
 
     // キャラクタドライバの登録
-    ret = register_chrdev(SKEL_MAJOR_NUM, "skel", &skel_fops);
+    ret = register_chrdev(SKEL_MAJOR_NUM, DEV_NAME, &skel_fops);
     if (ret != 0) {
         printk("SKEL Init: register_chrdev is err %d\n", ret);
         platform_driver_unregister(&skel_driver);
@@ -116,7 +117,7 @@ static int __init skel_init(void)
     printk("SKEL Init: register_chrdev OK\n");
 
     // プラットフォームバスにデバイスを登録
-    pdev = platform_device_register_simple("skel", -1, NULL, 0);
+    pdev = platform_device_register_simple(DEV_NAME, -1, NULL, 0);
     if (!pdev) {
         printk("SKLE Init: platform_device_register_simple is err %d\n", ret);
         unregister_chrdev(SKEL_MAJOR_NUM, "skel");
@@ -132,7 +133,7 @@ static void __exit skel_exit(void)
 {
     printk("SKEL Exit\n");
     platform_device_unregister(pdev);   // プラットフォームバスからデバイスの登録を解除
-    unregister_chrdev(SKEL_MAJOR_NUM, "skel");  // キャラクタ登録を解除
+    unregister_chrdev(SKEL_MAJOR_NUM, DEV_NAME);  // キャラクタ登録を解除
     platform_driver_unregister(&skel_driver);   // プラットフォームバスからドライバの登録を解除
     class_unregister(&skel_class);  // クラス登録の解除
 }
