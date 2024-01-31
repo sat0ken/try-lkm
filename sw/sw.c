@@ -68,17 +68,25 @@ static ssize_t sw_read(struct file *file, char __user *buf, size_t count, loff_t
 
     // SWの状態を読み取る
     val = (gpio[13] & (1 << (SW_PIN % 32))) != 0;
-    sprintf(msg, "%d", val);
+    sprintf(msg, "%d\n", val);
     
     len = strlen(msg);
+    if (len - *ppos == 0) {
+        return 0;
+    }
+    if (count > len - *ppos) {
+        count = len - *ppos;
+    }
     if (copy_to_user(buf, msg, len)) {
         return -EFAULT;
     }
+    *ppos += count;
+
 
     iounmap((void*)gpio);
     release_mem_region(GPIO_BASE_ADDR, MEM_SIZE);
 
-    return len;
+    return count;
 }
 
 // ファイル操作構造体
